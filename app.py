@@ -38,5 +38,5 @@ def chat():
     return jsonify({"response": model_reply})
 
 if __name__ == "__main__":
-    # Disabled debug mode for production safety
-    app.run(host="0.0.0.0", port=5000, debug=False)
+    # Bound to localhost to prevent B104 interface exposure
+    app.run(host="127.0.0.1", port=5000, debug=False)
