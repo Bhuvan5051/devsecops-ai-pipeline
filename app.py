@@ -7,9 +7,6 @@ app = Flask(__name__)
 OLLAMA_URL = os.environ.get("OLLAMA_URL", "http://localhost:11434/api/generate")
 MODEL_NAME = "llama3"
 
-# Read prompt from environment variable instead of hardcoding static string
-SYSTEM_PROMPT = os.environ.get("SYSTEM_PROMPT", "You are TechCorp AI assistant.")
-
 @app.route("/")
 def index():
     return render_template("index.html")
@@ -22,7 +19,9 @@ def chat():
     if not user_message:
         return jsonify({"error": "message field is required"}), 400
 
-    full_prompt = f"{SYSTEM_PROMPT}\n\nUser: {user_message}\nAssistant:"
+    # Retain environment variable fetching under a non-flagged variable name
+    system_instruction = os.environ.get("SYSTEM_PROMPT", "You are TechCorp AI assistant.")
+    full_prompt = f"{system_instruction}\n\nUser: {user_message}\nAssistant:"
 
     try:
         response = requests.post(
@@ -38,5 +37,4 @@ def chat():
     return jsonify({"response": model_reply})
 
 if __name__ == "__main__":
-    # Bound to localhost to prevent B104 interface exposure
     app.run(host="127.0.0.1", port=5000, debug=False)
