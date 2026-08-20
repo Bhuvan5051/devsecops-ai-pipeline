@@ -20,23 +20,19 @@ jobs:
           python-version: '3.10'
 
       - name: Gate 1 — Bandit SAST
-        continue-on-error: true
         run: |
           pip install bandit
           bandit -r .
 
       - name: Gate 2 — Safety Dependency Scan
-        continue-on-error: true
         run: |
           pip install safety
           safety check -r requirements.txt
 
       - name: Gate 3 — Gitleaks Secret Detection
-        continue-on-error: true
         uses: gitleaks/gitleaks-action@v2
         env:
           GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
 
       - name: Gate 4 — Custom Prompt Injection Scanner
-        continue-on-error: true
         run: python inject_scanner.py
