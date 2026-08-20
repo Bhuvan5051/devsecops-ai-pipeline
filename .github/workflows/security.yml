@@ -1,38 +1,48 @@
 name: DevSecOps AI Security Pipeline
-
 on: 
   push:
     branches: [ "main", "master" ]
-
 jobs:
   security_scans:
     runs-on: ubuntu-latest
-
     steps:
       - name: Checkout Repository
         uses: actions/checkout@v4
         with:
           fetch-depth: 0 
-
       - name: Set up Python
         uses: actions/setup-python@v5
         with:
           python-version: '3.10'
-
       - name: Gate 1 — Bandit SAST
+        id: gate1
+        continue-on-error: true
         run: |
           pip install bandit
           bandit -r .
-
       - name: Gate 2 — Safety Dependency Scan
+        id: gate2
+        continue-on-error: true
         run: |
           pip install safety
           safety check -r requirements.txt
-
       - name: Gate 3 — Gitleaks Secret Detection
+        id: gate3
+        continue-on-error: true
         uses: gitleaks/gitleaks-action@v2
         env:
           GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
-
       - name: Gate 4 — Custom Prompt Injection Scanner
+        id: gate4
+        continue-on-error: true
         run: python inject_scanner.py
+      - name: Enforce gate results
+        if: always()
+        run: |
+          if [ "${{ steps.gate1.outcome }}" == "failure" ] || \
+             [ "${{ steps.gate2.outcome }}" == "failure" ] || \
+             [ "${{ steps.gate3.outcome }}" == "failure" ] || \
+             [ "${{ steps.gate4.outcome }}" == "failure" ]; then
+            echo "One or more security gates failed."
+            exit 1
+          fi
